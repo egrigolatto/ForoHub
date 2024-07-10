@@ -1,4 +1,4 @@
-package forohub.api.topico;
+package forohub.api.domain.topico;
 
 public enum Curso {
     JAVA,

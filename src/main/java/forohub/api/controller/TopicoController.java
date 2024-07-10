@@ -1,6 +1,10 @@
 package forohub.api.controller;
 
-import forohub.api.topico.*;
+import forohub.api.domain.topico.Curso;
+import forohub.api.domain.topico.DatosActualizarTopico;
+import forohub.api.domain.topico.Topico;
+import forohub.api.domain.topico.TopicoRepository;
+import forohub.api.domain.topico.*;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -25,10 +30,14 @@ public class TopicoController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<Topico> crearTopico(@RequestBody @Valid DatosCrearTopico datosCrearTopico) {
+    public ResponseEntity<DatosRespuestaTopico> crearTopico(@RequestBody @Valid DatosCrearTopico datosCrearTopico,
+                                                            UriComponentsBuilder uriComponentsBuilder) {
         Topico topico = new Topico(datosCrearTopico);
         topicoRepository.save(topico);
-        return ResponseEntity.status(HttpStatus.CREATED).body(topico);
+
+        DatosRespuestaTopico respuestaTopico = new DatosRespuestaTopico(topico);
+        URI url = uriComponentsBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
+        return ResponseEntity.created(url).body(respuestaTopico);
     }
 
     @GetMapping
@@ -73,14 +82,18 @@ public class TopicoController {
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<Void> actualizarTopico(@PathVariable Long id, @RequestBody @Valid DatosActualizarTopico datosActualizarTopico) {
+    public ResponseEntity<DatosRespuestaTopico> actualizarTopico(@PathVariable Long id, @RequestBody @Valid DatosActualizarTopico datosActualizarTopico) {
         Optional<Topico> optionalTopico = topicoRepository.findById(id);
         if (optionalTopico.isPresent()) {
             Topico topico = optionalTopico.get();
             topico.actualizarTopico(datosActualizarTopico);
-            return ResponseEntity.noContent().build();
+
+            topicoRepository.save(topico);
+
+            DatosRespuestaTopico respuestaTopico = new DatosRespuestaTopico(topico);
+            return ResponseEntity.ok(respuestaTopico);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.notFound().build();
         }
     }
 

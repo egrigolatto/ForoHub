@@ -1,4 +1,4 @@
-package forohub.api.topico;
+package forohub.api.domain.topico;
 import java.time.LocalDateTime;
 
 public record DatosListadoTopico(
